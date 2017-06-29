@@ -1,3 +1,26 @@
+##Passing down props to media modal
+Some are used in many different places and are therefore defied in the very top level. i.e. `Master.js`. In order to pass these props down to the level in which you may want to use them you need to specify them in within the next level down.
+If the component you are passing down to is a stateless functional component then you'll have to define it like so:
+```
+const MyComponent = ({currentUser}) => (
+  <MediaLibraryDialog
+    currentUser={currentUser}
+    />
+  )
+```
+else if the component is defined within a class you'll have to do it like this:
+```
+class MyComponent extends Component {
+  render() {
+  return (
+      <MediaLibrary
+        currentUser={this.props.currentUser}
+    )
+  }
+}
+```
+***Still not clear on how everything has access to Master.js or how to determine the order in which you are passing down props....***
+
 ##Compose modal
 
 Notes taken from `feature/compose-modal`, commit comment: `modal working`
@@ -36,3 +59,79 @@ IMPORTANT: We need put this function in an `if` statement to first check whether
 __this is the point at which we tested the modal and it almost worked. We had to put one more line in this file to resolve an error__
 The error which came back on submission of the form was something like `connont read params of undefined` This is because at the point where the function was called we did not have access to `params`. To resolve this we first have to check if `params` exists so we put it in a ternary operator and set params to null if it couldn't be found:
 `this.props[method](createComposePayload(postType, data, (this.props.params ? this.props.params.id : null), 'NONE'))`  
+
+##Moving `Edit Campaign` into `Campaign Details`
+
+I started off importing the `CampaignForm` into the `CampaignDetails` page and trying to render this component with along with the rest of the components. This errored at `componentWillMount` in the `CampaignForm`. The error read `cannot read campaignId of undefined.` The problem was that although we have access to `currentUser` within `CampaignDetails` I had not passed down params which is what the `CampaignForm` required. Everything on the route level has access to params and if you want to components which are not on this level to have access then you have to pass them down. Looking in `AppRouts.js` you are able to see which components have access to these props?? (Still not entirely getting it. Ask Erika)
+Anyways, `Campaign.js` is the component at the top level which is pulling everything together for the campaign, it is importing `CampaignDetails` and this is where we need to assign `params` a var so we can access it in `CampaignDetails` and subsequently pass it down to the `CampaignForm` like so:
+```
+<CampaignDetails
+  campaign={campaign}
+  handleDeleteModal={this.handleDeleteModal}
+  handleComposeModal={this.handleComposeModal}
+  handleRulesModal={this.handleRulesModal}
+  currentResourcePermissions={currentResourcePermissions}
+  currentUser={currentUser}
+  params={this.props.params}
+/>
+```
+We can then access the `params` in `CampaignDetails`. As `CampaignDetails` is a stateless functional component we have to specify `params` in the object where the `CampaignDetails` component is defined. (Here we have `campaign` to `getCampaign` as that is how it is referenced in `campaignForm`) like so:
+```
+const CampaignDetails = ({
+  campaign,
+  handleDeleteModal,
+  handleComposeModal,
+  handleRulesModal,
+  currentResourcePermissions,
+  currentUser,
+  params
+}) => (
+  <Row>
+    <CampaignForm
+      getCampaign={campaign}
+      params={params}
+      />
+//rest of the component....
+```
+otherwise (I think) we could just access params using `this.props.params`
+Once we have access to the `params` in here we can then access `params` in Campaign form. Before we moved this component we had access to the `params` in `CampaignForm` because it was being used in `CampaignFormContiner` which is a route level component. `CampaignDetails` is not route level, but it is being used in `Campaign.js` which is, that's where we're getting the params from.
+Side notes:
+if you console log an object using concatination: console.log(`obj: ${my.object}`) then the object will be coerced into a string. you need to separate objects and strings with a comma like so: console.log('obj: ', my.obj)
+Also this is syntax for deconstructing an obj:
+`const { params: { campaignId }, getCampaign } = this.props`
+it's worth doing some research on it, it's tricky stuff but at least you know what to Google now. 
+
+Because the we are accessing the campain obj at a lower level here we just removed the `campainById` level on the queries.
+Its also worth mentioning that Lowdash wants two methods here, the first is where it's looking and the second (which has to be a string) is what it is looking for (I think)
+So this is what the `componentWillMount` function looked like before and after:
+
+Before:
+```
+componentWillMount () {
+    const { params: { campaignId }, getCampaign } = this.props
+    if (_.has(getCampaign, 'campaignById.id') && getCampaign.campaignById.id === campaignId) {
+      this.props.initialize({
+        title: getCampaign.campaignById.name,
+        description: getCampaign.campaignById.description,
+        image: getCampaign.campaignById.coverImageUrl
+      })
+    }
+  }
+```
+
+After:
+```
+componentWillMount () {
+    console.log('get campaign: ', this.props.getCampaign)
+    console.log('get params: ', this.props.params)
+
+    const { params: { campaignId }, getCampaign } = this.props
+    if (_.has(getCampaign, 'id') && getCampaign.id === campaignId) {
+      this.props.initialize({
+        title: getCampaign.name,
+        description: getCampaign.description,
+        image: getCampaign.coverImageUrl
+      })
+    }
+  }
+```
