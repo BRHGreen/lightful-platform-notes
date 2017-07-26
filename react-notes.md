@@ -1,3 +1,26 @@
+##Passing down props to media modal
+Some are used in many different places and are therefore defied in the very top level. i.e. `Master.js`. In order to pass these props down to the level in which you may want to use them you need to specify them in within the next level down.
+If the component you are passing down to is a stateless functional component then you'll have to define it like so:
+```
+const MyComponent = ({currentUser}) => (
+  <MediaLibraryDialog
+    currentUser={currentUser}
+    />
+  )
+```
+else if the component is defined within a class you'll have to do it like this:
+```
+class MyComponent extends Component {
+  render() {
+  return (
+      <MediaLibrary
+        currentUser={this.props.currentUser}
+    )
+  }
+}
+```
+***Still not clear on how everything has access to Master.js or how to determine the order in which you are passing down props....***
+
 ##Compose modal
 
 Notes taken from `feature/compose-modal`, commit comment: `modal working`
