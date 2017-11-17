@@ -1,3 +1,5 @@
+IMPORTANT: you only have access to `this` in a class not in a stateless component
+
 ##Passing down props to media modal
 Some are used in many different places and are therefore defied in the very top level. i.e. `Master.js`. In order to pass these props down to the level in which you may want to use them you need to specify them in within the next level down.
 If the component you are passing down to is a stateless functional component then you'll have to define it like so:

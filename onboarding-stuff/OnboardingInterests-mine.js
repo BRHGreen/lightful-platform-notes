@@ -10,8 +10,10 @@ class OnboardingInterests extends Component {
   }
 
   handleSelectedInterest (interest, i) {
-    console.log('this: ', this);
+    // you can get rid of `allInterests` and disableButton as we no longer have them passed down as props/states in OnboardingWizard
     const { selectedInterests, allInterests, disableButton } = this.props
+
+    // Erika made a function called `updateSelectedInterests` which handles all of this stuff WAAAAY more elegantly. Changes are made are numerous to incude here. 
     let indexName = allInterests.indexOf(interest)
     interest.key = i
     if (selectedInterests.length >= 2) {
@@ -19,10 +21,12 @@ class OnboardingInterests extends Component {
     } else {
       selectedInterests.push(interest)
       this.setState({ selectedInterests: selectedInterests })
-      console.log('selectedInterests: ', selectedInterests.length);
+
+      //disableButton function does not exist anymore
       if (selectedInterests.length === 1) {
         disableButton()
       }
+
       if (indexName > -1) {
         allInterests.splice(indexName, 1)
         this.setState({ allInterests: allInterests })

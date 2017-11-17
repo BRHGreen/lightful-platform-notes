@@ -7,13 +7,23 @@ import Button from '../../common/Button'
 
 class OnboardingWizard extends Component {
   state = {
+    // you're changing this in the backend anyway so you can assign it to a prop in render
     onboardingState: this.props.currentUser.currentUser.onboardingState,
-    // don't set the onboardingStates in state. Set them as a const ouside of the class.
+
+    // don't set the onboardingStates in state. Set them as a const ouside of the class
     onboardingStates: ['CONFIRM', 'SOCIAL', 'INTERESTS', 'COMPLETE'],
+
+    // You can make sure this whole component is only rendered when it needs to be by setting a condition in App.js where the component is rendered
     onboardingDialogOpen: true,
+
+    // you can just define this in render as well
     allInterests: this.props.listenInterests.allListenInterests
       ? this.props.listenInterests.allListenInterests.nodes : [],
+
+    //of all the crap which you put in here this is the only state which you need in this component.
     selectedInterests: [],
+
+    //you can put the conditions for this straigt in the `disabled` prop of the button
     buttonDisabled: true
   }
 
@@ -21,10 +31,13 @@ class OnboardingWizard extends Component {
     this.setState({ buttonDisabled: !this.state.buttonDisabled })
   }
 
+  //you can call this function on componentWillMount.
   updateUserOnboardingState = (updatedState) => {
+  // Also you can just set a condition in the dialog `open` prop like this: open={onboardingState !== 'COMPLETE'} instead of using an `if` statement here
     if (updatedState === 'COMPLETE') {
       this.setState({ onboardingDialogOpen: false })
     }
+    // if you're updating the state in the backend then you can access the state as a prop anyway. You don't have to set a state in React as well
     this.setState({ onboardingState: updatedState })
     this.props.updateUserOnboardingState({
       variables: {
