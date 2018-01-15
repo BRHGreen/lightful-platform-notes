@@ -10,12 +10,13 @@ alias sqitch_deploy='sqitch --engine pg deploy --verify db:pg://postgres@localho
 cd into the database directory within the api: `cd database`
 
 once there run the following command to create a new a field. The first arg is specifying which table you are adding to along with the name of the sprint for future reference. The second arg is just a commit note:
-`sqitch add invitesTableS24 -n 'add name field to invites table'`
+`sqitch add invitesTableS24 -n 'add name field to invites table'` or you may see that some people have also included the date to avoid conflicting 
 
 Once you have run this then you will see something like this printed out in the terminal:
 ```
 Created deploy/invitesTableS24.sql
 Created revert/invitesTableS24.sql
+//don't worry about verify too much. we odont' use it  much
 Created verify/invitesTableS24.sql
 Added "invitesTableS24" to sqitch.plan
 ```
@@ -24,7 +25,13 @@ These are the files in which you will need to write your SQL queries. You can wr
 ```
 BEGIN;
 
+// here the character varifying is our type but this may be `sting` or `int` or you can create custom types just like you may have to in GQL.
+// we have pulic and lightful_private tables. Public will create 
 ALTER TABLE "public"."invites" ADD COLUMN "invite_name" character varying(255);
+
+//you may have to write a function to create defaults for the column you've added. check `deploy/organisationss26` for an example of this.
+
+//You'll be able to test your sql in navigate > go to terminal. Maybe have a look at pg admin instead of postico for all you database gui need. It'll show you all of the functions as well as the tables.
 
 COMMIT;
 ```
@@ -128,3 +135,58 @@ node_modules/.bin/jest /Users/benedictgreen/development/lightful/delightfulapi/_
 ```
 
 If you're all good at this point then you should be done with adding a new field to the backend.
+
+
+
+This is the function which James talked me through. It does the following:
+- adds a column called `onboarding_state` to the `organisations` table.
+- for existing organisations it set their state to `complete`. Only new organisations will be onboarded
+- puts the organisation at the start of the onboarding process if they don't have social accounts connected. (Surely this would be applicabble to existing organisations, therefore we must be checking only be setting organisations' state to complete if they do have social accounts connected otherwise we'll be onboarding them?? Dunno) 
+- 
+-- Deploy delightfulapi:organisationsS26 to pg
+```
+
+BEGIN;
+
+ALTER TABLE "organisations" ADD COLUMN "onboarding_state" account_onboarding_states NOT NULL DEFAULT 'confirm';
+
+-- all organisations go to complete
+UPDATE public.organisations SET onboarding_state = 'complete';
+
+-- if they don't have social accounts then put them to the beginning of the onboarding process
+UPDATE public.organisations
+SET onboarding_state = 'confirm'
+WHERE NOT EXISTS (
+    SELECT * FROM public.social_identities
+    WHERE social_identities.organisation_id = organisations.id
+    AND social_identities.social_identity_state = 'active'
+);
+
+-- create a function to alter the onboarding state
+CREATE OR REPLACE FUNCTION public.update_organisation_onboarding_state(
+    onboarding_state account_onboarding_states
+) returns public.organisations as $$
+
+//this is how you set a veriable in psql. 
+DECLARE organisations public.organisations;
+BEGIN
+    perform lightful_private.throw_on_no_permission('edit', 'organisation');
+
+    UPDATE public.organisations
+        // here we are setting the first argument of the function but we have to reference it using dot notation and the name of the function
+        SET onboarding_state = update_organisation_onboarding_state.onboarding_state
+        WHERE id = NULLIF(current_setting('jwt.claims.organisation_id'), '')::uuid
+    RETURNING * INTO organisations;
+
+    RETURN organisations;
+
+END;
+$$ language plpgsql security definer;
+
+GRANT EXECUTE ON FUNCTION public.update_organisation_onboarding_state(account_onboarding_states) TO customer;
+
+COMMENT ON FUNCTION public.update_organisation_onboarding_state(account_onboarding_states)
+IS 'Updates the organisation onboarding state';
+
+COMMIT;
+```
