@@ -26,7 +26,7 @@ alias sqitch_deploy='sqitch --engine pg deploy --verify db:pg://postgres@localho
 
 cd into the database directory within the api: `cd database`
 
-once there run the following command to create a new a field. The first arg is specifying which table you are adding to along with the name of the sprint for future reference. The second arg is a commit note:
+once there run the following command to create a new a field. The first arg is specifying which table you are adding to along with the name of the sprint for future reference. The second arg is a commit note (but for a Sqitch commit. It'll appear as a comment at the top of the files createc):
 `sqitch add invitesTableS24 -n 'add name field to invites table'` or you may see that some people have also included the date to avoid conflicts
 
 Once you have run this then you will see something like this printed out in the terminal:
