@@ -50,3 +50,45 @@ Created revert/change_pass.sql
 Created verify/change_pass.sql
 Added "change_pass [users appschema]" to sqitch.plan
 ```
+
+
+This is where we add a new table with reference to fields in the new table (in this case `nickname`). It this how you create relationships?
+```
+-- Deploy flipr:flips to pg
+-- requires: appschema
+-- requires: users
+
+BEGIN;
+
+SET client_min_messages = 'warning';
+
+CREATE TABLE flipr.flips (
+    id        BIGSERIAL   PRIMARY KEY,
+    nickname  TEXT        NOT NULL REFERENCES flipr.users(nickname),
+    body      TEXT        NOT NULL DEFAULT '' CHECK ( length(body) <= 180 ),
+    timestamp TIMESTAMPTZ NOT NULL DEFAULT clock_timestamp()
+);
+
+COMMIT;
+```
+
+And the `Create` operation for the above:
+```
+-- Deploy flipr:insert_flip to pg
+-- requires: flips
+-- requires: appschema
+-- requires: users
+
+BEGIN;
+
+CREATE OR REPLACE FUNCTION flipr.insert_flip(
+   nickname TEXT,
+   body     TEXT
+) RETURNS BIGINT LANGUAGE sql SECURITY DEFINER AS $$
+    INSERT INTO flipr.flips (nickname, body)
+    VALUES ($1, $2)
+    RETURNING id;
+$$;
+
+COMMIT;
+```
