@@ -1,0 +1,19 @@
+
+```
+mutation {
+    createCalendarEvent(input: {
+      startsAt: "2018-03-13T16:36:33.939Z"
+      endsAt: "2018-03-13T16:36:33.939Z"
+      recurrence: NONE
+      name: "benedict day"
+    }) {
+      calendarEvent{
+        id,
+        startsAt,
+        endsAt,
+        recurrence,
+        name,
+      }
+    }
+  }
+  ```

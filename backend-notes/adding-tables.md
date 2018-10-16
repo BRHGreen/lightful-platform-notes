@@ -4,7 +4,7 @@ Questions:
 - what is this `$$` ??
 
 ##TABLES
-The following is my own naive attempt at starting the BE part of ticket 2040 As a user, `I need to be able to insert static milestones into my calendar`, pre Gio's (or anyone else's input). I've used relevant examples from the above tutorial.
+The following is my own naive attempt at starting the B/E part of ticket 2040 As a user, `I need to be able to insert static milestones into my calendar`, pre Gio's (or anyone else's input). I've used relevant examples from the above tutorial.
 
 ###create a new table called `user_events`
 // `appschema` this is what this tutorial has specified as their schema name. The only deploy script which I could find for our schema was for `lightful_private`.
@@ -92,3 +92,9 @@ $$;
 
 COMMIT;
 ```
+
+
+
+
+Gio's stuff:
+There is a function which pulls in the `awareness days` for the calendar already. We ideally want this same function to also fetch the `events` as it can then be fetched with the same query in the FE.
